@@ -22,14 +22,24 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Find the project folder
+        run: |
+          SETTINGS=$(find . -name "settings.gradle.kts" -not -path "*/.*" | head -n 1)
+          if [ -z "$SETTINGS" ]; then
+            echo "Could not find settings.gradle.kts anywhere in this repo — upload the project files first."
+            exit 1
+          fi
+          echo "PROJECT_DIR=$(dirname "$SETTINGS")" >> "$GITHUB_ENV"
+
       - name: Build debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
         run: gradle assembleDebug --stacktrace
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/CalmNow.apk
+        run: mv "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" "$PROJECT_DIR/app/build/outputs/apk/debug/CalmNow.apk"
 
       - name: Upload APK (downloads as a zip)
         uses: actions/upload-artifact@v4
         with:
           name: CalmNow-debug-apk
-          path: app/build/outputs/apk/debug/CalmNow.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/CalmNow.apk
