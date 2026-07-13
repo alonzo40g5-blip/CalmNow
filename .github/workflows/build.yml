@@ -22,13 +22,27 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Find the project folder
+      - name: Find the project (unzip if needed)
         run: |
-          SETTINGS=$(find . -name "settings.gradle.kts" -not -path "*/.*" | head -n 1)
+          find_settings() {
+            find . -name "settings.gradle.kts" -not -path "*/.*" | head -n 1
+          }
+          SETTINGS=$(find_settings)
           if [ -z "$SETTINGS" ]; then
-            echo "Could not find settings.gradle.kts anywhere in this repo — upload the project files first."
+            ZIP=$(find . -name "*.zip" -not -path "*/.*" | head -n 1)
+            if [ -n "$ZIP" ]; then
+              echo "No project files found, but found $ZIP — extracting it."
+              unzip -q "$ZIP" -d _unzipped
+              SETTINGS=$(find_settings)
+            fi
+          fi
+          if [ -z "$SETTINGS" ]; then
+            echo "No settings.gradle.kts and no zip found. Upload CalmNow.zip to the repo."
+            echo "Files currently in the repo:"
+            find . -maxdepth 2 -not -path "*/.*"
             exit 1
           fi
+          echo "Building project at: $(dirname "$SETTINGS")"
           echo "PROJECT_DIR=$(dirname "$SETTINGS")" >> "$GITHUB_ENV"
 
       - name: Build debug APK
