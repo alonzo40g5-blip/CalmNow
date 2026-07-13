@@ -31,18 +31,15 @@ jobs:
           if [ -z "$SETTINGS" ]; then
             ZIP=$(find . -name "*.zip" -not -path "*/.*" | head -n 1)
             if [ -n "$ZIP" ]; then
-              echo "No project files found, but found $ZIP — extracting it."
+              echo "Extracting $ZIP"
               unzip -q "$ZIP" -d _unzipped
               SETTINGS=$(find_settings)
             fi
           fi
           if [ -z "$SETTINGS" ]; then
-            echo "No settings.gradle.kts and no zip found. Upload CalmNow.zip to the repo."
-            echo "Files currently in the repo:"
-            find . -maxdepth 2 -not -path "*/.*"
+            echo "No project and no zip found in the repo."
             exit 1
           fi
-          echo "Building project at: $(dirname "$SETTINGS")"
           echo "PROJECT_DIR=$(dirname "$SETTINGS")" >> "$GITHUB_ENV"
 
       - name: Build debug APK
